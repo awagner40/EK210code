@@ -1,0 +1,55 @@
+#include "DHT.h"
+#include <SoftwareSerial.h>
+
+#define TECena 3
+#define TECcold 7
+#define TEChot 8
+#define DHTPIN 11// what digital pin we're connected to
+#define DHTTYPE DHT22
+
+
+DHT dht(DHTPIN, DHTTYPE);
+SoftwareSerial ble_device(9,10);
+
+void setup() {
+  
+  Serial.begin(9600);
+ 
+  ble_device.begin(9600);
+dht.begin(); // prepare DHT sensor
+  
+  pinMode(TECena, OUTPUT);
+  pinMode(TEChot, OUTPUT);
+  pinMode(TECcold, OUTPUT);
+  
+
+}
+
+void loop() {
+  delay(2000);
+  float h = dht.readHumidity(); // reads humidity 
+  float f = dht.readTemperature(true); // reads temperature
+  
+ if (f < 50) { // temp below range
+    digitalWrite(TEChot, HIGH); // turns on heating feature
+    digitalWrite(TECcold, LOW); // turns off cooling feature
+     char f_str[6];
+     dtostrf(f,2,1,f_str); // format data into char array
+    ble_device.write("Temp(F) Out of Range");
+    ble_device.write(f_str); // send to BLExAR in form of char array
+    
+}
+    else if (f > 86) { // temp above range
+   digitalWrite(TEChot, LOW); // turns off heating feature
+    digitalWrite(TECcold, HIGH); // turns on cooling feature
+     char f_str[6];
+     dtostrf(f,2,1,f_str); // format data into char array
+     ble_device.write("Temp(F) Out of Range");
+    ble_device.write(f_str);  // send to BLExAR in form of char array
+  }
+  else {
+    digitalWrite(TEChot, LOW);
+    digitalWrite(TECcold, LOW);
+  }
+  
+}
